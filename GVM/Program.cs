@@ -12,18 +12,63 @@ namespace GVM
         {
             StackMachine s = new StackMachine();
 
+            // push a couple values
             s.PushVal(1);
             s.PushVal(3);
-            s.Call(StackMachine.AddInt32);
-            s.Call(StackMachine.PrintInt32);
+
+            // try adding
+            s.Call(SysCall.AddInt32);
+            s.Call(SysCall.PrintInt32);
             Console.WriteLine();
+
+            // try pushing and printing a string
             s.PushVal("test");
-            s.Call(StackMachine.PrintString);
+            s.Call(SysCall.PrintString);
             Console.WriteLine();
+
+            // try subtracting
             s.PopVal();
             s.PushVal(2);
-            s.Call(StackMachine.SubInt32);
-            s.Call(StackMachine.PrintInt32);
+            s.Call(SysCall.SubInt32);
+            s.Call(SysCall.PrintInt32);
+            Console.WriteLine();
+
+            // try storing a local variable and copying the top of the stack a couple times
+            s.StoreVal("sample variable");
+            s.Copy();
+            s.Copy();
+            s.Copy();
+            s.PushVal(2);
+
+            // try multiplying
+            s.Call(SysCall.MulInt32);
+            s.Call(SysCall.PrintInt32);
+            Console.WriteLine();
+
+            // try loading a local variable
+            s.LoadValue("sample variable");
+            s.Call(SysCall.PrintInt32);
+            Console.WriteLine();
+
+            // try multiplying
+            s.Call(SysCall.MulInt32);
+            s.Call(SysCall.PrintInt32);
+            Console.WriteLine();
+
+            // do it again with the next value on the stack
+            s.Call(SysCall.MulInt32);
+            s.Call(SysCall.PrintInt32);
+            Console.WriteLine();
+
+            // try swapping and dividing a couple times
+            s.Swap();
+            s.Call(SysCall.DivInt32);
+            s.Call(SysCall.PrintInt32);
+            Console.WriteLine();
+
+            s.Swap();
+            s.Call(SysCall.DivInt32);
+            s.Call(SysCall.PrintInt32);
             Console.WriteLine();
         }
     }

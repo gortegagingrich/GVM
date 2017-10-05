@@ -7,11 +7,6 @@ using System.Threading.Tasks;
 
 namespace GVM
 {
-    interface Callable
-    {
-        void Call(Stack<IConvertible> stack);
-    }
-
     // each state needs to keep track of the current data stack and a local symbol table
     struct MachineState
     {
@@ -54,27 +49,27 @@ namespace GVM
             f.Invoke(CurrentState.DataStack);
         }
 
-        public static void AddInt32(Stack<IConvertible> stack) 
+        public void StoreVal(Object addr)
         {
-            stack.Push(stack.Pop().ToInt32(null) + stack.Pop().ToInt32(null));
+            CurrentState.LocalSymbolTable[addr] = CurrentState.DataStack.Peek();
         }
 
-        public static void SubInt32(Stack<IConvertible> stack)
+        public void LoadValue(Object addr)
         {
-            Int32 temp;
-
-            temp = stack.Pop().ToInt32(null);
-            stack.Push(stack.Pop().ToInt32(null) - temp);
+            CurrentState.DataStack.Push((IConvertible)CurrentState.LocalSymbolTable[addr]);
         }
 
-        public static void PrintInt32(Stack<IConvertible> stack)
+        public void Copy()
         {
-            Console.Write(stack.Peek().ToInt32(null));
+            CurrentState.DataStack.Push(CurrentState.DataStack.Peek());
         }
 
-        public static void PrintString(Stack<IConvertible> stack)
+        public void Swap()
         {
-            Console.Write(stack.Peek().ToString());
+            var a = CurrentState.DataStack.Pop();
+            var b = CurrentState.DataStack.Pop();
+            CurrentState.DataStack.Push(a);
+            CurrentState.DataStack.Push(b);
         }
     }
 }
