@@ -8,6 +8,47 @@ namespace GVM
      */
     abstract class SysCall
     {
+        public static Action<Stack<IConvertible>> GetAction(IConvertible i)
+        {
+            Action<Stack<IConvertible>> fn;
+
+            switch (i)
+            {
+                case 0:
+                    fn = AddInt32;
+                    break;
+
+                case 1:
+                    fn = SubInt32;
+                    break;
+
+                case 2:
+                    fn = MulInt32;
+                    break;
+
+                case 3:
+                    fn = DivInt32;
+                    break;
+
+                case 4:
+                    fn = PrintInt32;
+                    break;
+
+                case 5:
+                    fn = PrintString;
+                    break;
+
+                default:
+                    fn = (stack) =>
+                    {
+                        Console.WriteLine("Unknown syscall: " + i);
+                    };
+                    break;
+            }
+
+            return fn;
+        }
+
         public static void AddInt32(Stack<IConvertible> stack)
         {
             stack.Push(stack.Pop().ToInt32(null) + stack.Pop().ToInt32(null));
@@ -41,7 +82,7 @@ namespace GVM
 
         public static void PrintString(Stack<IConvertible> stack)
         {
-            Console.Write(stack.Peek().ToString());
+            Console.Write(StackMachine.GlobalSymbolTable[stack.Pop()]);
         }
     }
 }

@@ -17,20 +17,27 @@ namespace GVM
             s.PushVal(3);
 
             // try adding
-            s.Call(SysCall.AddInt32);
-            s.Call(SysCall.PrintInt32);
+            s.PushVal(0);
+            s.Call();
+            s.PushVal(4);
+            s.Call();
             Console.WriteLine();
 
             // try pushing and printing a string
             s.PushVal("test");
-            s.Call(SysCall.PrintString);
+            s.StoreValGlobal(1);
+            s.PushVal(1);
+            s.PushVal(5); // print string in global symbol table with key on top of stack
+            s.Call();
             Console.WriteLine();
 
             // try subtracting
             s.PopVal();
             s.PushVal(2);
-            s.Call(SysCall.SubInt32);
-            s.Call(SysCall.PrintInt32);
+            s.PushVal(1); // perform subtraction
+            s.Call();
+            s.PushVal(4); // print int32 on top of stack
+            s.Call();
             Console.WriteLine();
 
             // try storing a local variable and copying the top of the stack a couple times
