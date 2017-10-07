@@ -7,14 +7,6 @@ using System.Threading.Tasks;
 
 namespace GVM
 {
-    // each state needs to keep track of the current data stack and a local symbol table
-    struct MachineState
-    {
-        public Stack<IConvertible> DataStack;
-        public Hashtable LocalSymbolTable;
-        // not actually used yet
-        // public int ProgramCounter;
-    }
 
     class StackMachine
     {
@@ -29,16 +21,87 @@ namespace GVM
             CurrentState = new MachineState
             {
                 DataStack = new Stack<IConvertible>(),
-                LocalSymbolTable = new Hashtable()
+                LocalSymbolTable = new Hashtable(),
+                ProgramCounter = 0
             };
             
             PreviousStates = new Stack<MachineState>();
         }
 
-        // removes and returns value on top of current data stack
-        public IConvertible PopVal()
+        public void ExecuteInstructions(List<Instruction> list)
         {
-            return CurrentState.DataStack.Pop();
+            while (CurrentState.ProgramCounter < list.Count())
+            {
+                ExecuteInstruction(list.ElementAt(CurrentState.ProgramCounter++));
+            }
+        }
+
+        public void ExecuteInstruction(Instruction inst)
+        {
+            switch ((int)inst.Op)
+            {
+                case 0:
+                    PushVal(inst.Value);
+                    break;
+
+                case 1:
+                    PopVal();
+                    break;
+
+                case 2:
+                    Call();
+                    break;
+
+                case 3:
+                    StoreVal(inst.Value);
+                    break;
+
+                case 4:
+                    StoreValGlobal(inst.Value);
+                    break;
+
+                case 5:
+                    LoadValue(inst.Value);
+                    break;
+
+                case 6:
+                    LoadValueGlobal(inst.Value);
+                    break;
+
+                case 7:
+                    Copy();
+                    break;
+
+                case 8:
+                    Swap();
+                    break;
+
+                case 9:
+                    Over();
+                    break;
+
+                case 10:
+                    PushState(inst.Value.ToInt32(null));
+                    break;
+
+                case 11:
+                    PopState();
+                    break;
+
+                case 12:
+                    If(inst.Value.ToInt32(null));
+                    break;
+
+                default:
+                    Console.WriteLine("Unknown opcode: " + inst.Op);
+                    break;
+            }
+        }
+
+        // removes and returns value on top of current data stack
+        public void PopVal()
+        {
+            CurrentState.DataStack.Pop();
         }
 
         // pushes given IConvertible value onto current data stack
@@ -113,13 +176,14 @@ namespace GVM
 
         // switches to a new state with a new data stack and local symbol table
         // will be used for stuff like subroutines
-        public void PushState()
+        public void PushState(int pc)
         {
             PreviousStates.Push(CurrentState);
             CurrentState = new MachineState
             {
                 DataStack = new Stack<IConvertible>(),
-                LocalSymbolTable = new Hashtable()
+                LocalSymbolTable = new Hashtable(),
+                ProgramCounter = pc
             };
         }
 
@@ -133,9 +197,14 @@ namespace GVM
         // if value on top of stack is 0, jumps to instruction number
         // at CurrentState.LocalSymbolTable["If-Branch"]
         // Won't be implemented until I design an instruction set
-        public void If()
+        public void If(int pc)
         {
-            throw new NotImplementedException();
+            var top = CurrentState.DataStack.Pop().ToInt32(null);
+
+            if (top == 0)
+            {
+                CurrentState.ProgramCounter = pc;
+            }
         }
     }
 }

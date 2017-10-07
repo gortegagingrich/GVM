@@ -12,71 +12,83 @@ namespace GVM
         {
             StackMachine s = new StackMachine();
 
-            // push a couple values
-            s.PushVal(1);
-            s.PushVal(3);
+            s.ExecuteInstructions(new List<Instruction> {
+                // 1 + 3
+                new Instruction(0x00,1), // push 1
+                new Instruction(0x00,3), // push 3
+                new Instruction(0x00,Calls.AddInt32), // push 0
+                new Instruction(0x02,null), // call
 
-            // try adding
-            s.PushVal(0);
-            s.Call();
-            s.PushVal(4);
-            s.Call();
-            Console.WriteLine();
+                // print result
+                new Instruction(0x00,Calls.PrintInt32), // push 8
+                new Instruction(0x02,null), // call
 
-            // try pushing and printing a string
-            s.PushVal("test");
-            s.StoreValGlobal(1);
-            s.PushVal(1);
-            s.PushVal(5); // print string in global symbol table with key on top of stack
-            s.Call();
-            Console.WriteLine();
+                // print new line
+                new Instruction(0x00,"\n"), // push "\n"
+                new Instruction(0x04,"a"), // store_global "a"
+                new Instruction(0x01,null), // pop
+                new Instruction(0x00,"a"), // push "a"
+                new Instruction(0x00,Calls.PrintStringAddr), // push 10
+                new Instruction(0x02,null), // call
 
-            // try subtracting
-            s.PopVal();
-            s.PushVal(2);
-            s.PushVal(1); // perform subtraction
-            s.Call();
-            s.PushVal(4); // print int32 on top of stack
-            s.Call();
-            Console.WriteLine();
+                // 4 - 2
+                new Instruction(0x00,2), // push 2
+                new Instruction(0x00,Calls.SubInt32), // push 1
+                new Instruction(0x02,null), // call
 
-            // try storing a local variable and copying the top of the stack a couple times
-            s.StoreVal("sample variable");
-            s.Copy();
-            s.Copy();
-            s.Copy();
-            s.PushVal(2);
+                // print result
+                new Instruction(0x00,Calls.PrintInt32), // push 8
+                new Instruction(0x02,null), // call
 
-            // try multiplying
-            s.Call(SysCall.MulInt32);
-            s.Call(SysCall.PrintInt32);
-            Console.WriteLine();
+                // print new line
+                new Instruction(0x00,"\n"), // push "\n"
+                new Instruction(0x04,"a"), // store_global "a"
+                new Instruction(0x01,null), // pop
+                new Instruction(0x00,"a"), // push "a"
+                new Instruction(0x00,Calls.PrintStringAddr), // push 10
+                new Instruction(0x02,null), // call
 
-            // try loading a local variable
-            s.LoadValue("sample variable");
-            s.Call(SysCall.PrintInt32);
-            Console.WriteLine();
+                // store and load local variable
+                new Instruction(0x03, "SampleVariable"), // store_local "SampleVariable"
+                new Instruction(0x05, "SampleVariable"), // load_local "SampleVariable"
 
-            // try multiplying
-            s.Call(SysCall.MulInt32);
-            s.Call(SysCall.PrintInt32);
-            Console.WriteLine();
+                // 2 ^ 4
+                new Instruction(0x07, null), // copy
+                new Instruction(0x07, null), // copy
+                new Instruction(0x07, null), // copy
+                new Instruction(0x00, 2), // push 2
+                new Instruction(0x00, Calls.MulInt32), // push 2
+                new Instruction(0x02,null), // call
+                new Instruction(0x00, Calls.MulInt32), // push 2
+                new Instruction(0x02,null), // call
+                new Instruction(0x00, Calls.MulInt32), // push 2
+                new Instruction(0x02,null), // call
 
-            // do it again with the next value on the stack
-            s.Call(SysCall.MulInt32);
-            s.Call(SysCall.PrintInt32);
-            Console.WriteLine();
+                // print result
+                new Instruction(0x00,Calls.PrintInt32), // push 8
+                new Instruction(0x02,null), // call
 
-            // try swapping and dividing a couple times
-            s.Swap();
-            s.Call(SysCall.DivInt32);
-            s.Call(SysCall.PrintInt32);
-            Console.WriteLine();
+                // print new line
+                new Instruction(0x00,"\n"), // push "\n"
+                new Instruction(0x04,"a"), // store_global "a"
+                new Instruction(0x01,null), // pop
+                new Instruction(0x00,"a"), // push "a"
+                new Instruction(0x00,Calls.PrintStringAddr), // push 10
+                new Instruction(0x02,null), // call
 
-            s.Swap();
-            s.Call(SysCall.DivInt32);
-            s.Call(SysCall.PrintInt32);
-            Console.WriteLine();
+                // swap and divide a couple times
+                new Instruction(0x08,null), // swap
+                new Instruction(0x00,Calls.DivInt32), // push 3
+                new Instruction(0x02, null), // call
+                new Instruction(0x08,null), // swap
+                new Instruction(0x00,Calls.DivInt32), // push 3
+                new Instruction(0x02, null), // call
+
+                // print result
+                new Instruction(0x00,Calls.PrintInt32), // push 8
+                new Instruction(0x02,null) // call
+
+            });
         }
     }
 }
