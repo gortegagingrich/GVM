@@ -25,6 +25,17 @@ namespace GVM
              * 0x0A = PushState(Value)
              * 0x0B = PopState()
              * 0x0C = If(Value)
+             * 
+             * 0x10 = AddInt()
+             * 0x11 = SubInt()
+             * 0x12 = MulInt()
+             * 0x13 = DivInt() // sets GlobalSymbolTable["Remainder"] to remainder
+             * 0x14 = AddFloat()
+             * 0x15 = SubFloat()
+             * 0x16 = MulFloat()
+             * 0x17 = DivFloat()
+             * 
+             * 0xFF = END
              */
             Op = op;
             Value = val;

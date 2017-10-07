@@ -30,7 +30,7 @@ namespace GVM
 
         public void ExecuteInstructions(List<Instruction> list)
         {
-            while (CurrentState.ProgramCounter < list.Count())
+            while (CurrentState.ProgramCounter < list.Count() && list.ElementAt(CurrentState.ProgramCounter).Op != 0xFF)
             {
                 ExecuteInstruction(list.ElementAt(CurrentState.ProgramCounter++));
             }
@@ -92,6 +92,38 @@ namespace GVM
                     If(inst.Value.ToInt32(null));
                     break;
 
+                case 0x10:
+                    AddInt();
+                    break;
+
+                case 0x11:
+                    SubInt();
+                    break;
+
+                case 0x12:
+                    MulInt();
+                    break;
+
+                case 0x13:
+                    DivInt();
+                    break;
+
+                case 0x14:
+                    AddFloat();
+                    break;
+
+                case 0x15:
+                    SubFloat();
+                    break;
+
+                case 0x16:
+                    MulFloat();
+                    break;
+
+                case 0x17:
+                    DivFloat();
+                    break;
+
                 default:
                     Console.WriteLine("Unknown opcode: " + inst.Op);
                     break;
@@ -114,14 +146,14 @@ namespace GVM
         // this is used for whatever you might want to implement through syscalls,
         // like printing out values from the stack or symbol tables.
         // Normally, Call() should be used instead; this is here to make testing syscalls easier.
-        internal void Call(Action<Stack<IConvertible>> f)
+        internal void Call(Action f)
         {
-            f(CurrentState.DataStack);
+            f();
         }
 
         public void Call()
         {
-            SysCall.GetAction(CurrentState.DataStack.Pop())(CurrentState.DataStack);
+            SysCall.GetAction(CurrentState.DataStack.Pop())();
         }
 
         // looks up the value at the top of the current data stack
@@ -205,6 +237,52 @@ namespace GVM
             {
                 CurrentState.ProgramCounter = pc;
             }
+        }
+
+        // Int32 arithmetic
+        public void AddInt()
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) + CurrentState.DataStack.Pop().ToInt32(null));
+        }
+
+        public void SubInt()
+        {
+            var temp = CurrentState.DataStack.Pop().ToInt32(null);
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) - temp);
+        }
+
+        public void MulInt()
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) * CurrentState.DataStack.Pop().ToInt32(null));
+        }
+
+        public void DivInt()
+        {
+            var temp = CurrentState.DataStack.Pop().ToInt32(null);
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) / temp);
+        }
+
+        // Float32 arithmetic
+        public void AddFloat()
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) + CurrentState.DataStack.Pop().ToSingle(null));
+        }
+
+        public void SubFloat()
+        {
+            var temp = CurrentState.DataStack.Pop().ToSingle(null);
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) - temp);
+        }
+
+        public void MulFloat()
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) * CurrentState.DataStack.Pop().ToSingle(null));
+        }
+
+        public void DivFloat()
+        {
+            var temp = CurrentState.DataStack.Pop().ToSingle(null);
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) / temp);
         }
     }
 }
