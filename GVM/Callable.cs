@@ -5,8 +5,8 @@ namespace GVM
 {
     // notes: 
     // syscalls should never have any effect on any data stacks
-    // syscalls should only take one argument from the global symbol table
-    // GlobalSymbolTable[0xffff] is reserved for passing necessary arguments
+    // default syscalls should only take one argument from the global symbol table
+    // GlobalSymbolTable[0xffff] should be reserved for passing arguments to default syscalls
     abstract class SysCall
     {
         public static Action GetAction(IConvertible i)

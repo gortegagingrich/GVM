@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace GVM
 {
-
     class StackMachine
     {
 
         private MachineState CurrentState;
         private Stack<MachineState> PreviousStates;
+        private Hashtable Syscalls;
 
         internal static Hashtable GlobalSymbolTable = new Hashtable();
 
@@ -26,6 +26,23 @@ namespace GVM
             };
             
             PreviousStates = new Stack<MachineState>();
+
+            SetDefaultSyscalls();
+        }
+
+        public void AddSyscall(IConvertible id, Action act)
+        {
+            Syscalls[id] = act;
+        }
+
+        public void SetDefaultSyscalls()
+        {
+            Syscalls = new Hashtable
+            {
+                [Calls.PrintInt32] = SysCall.GetAction(Calls.PrintInt32),
+                [Calls.PrintFloat32] = SysCall.GetAction(Calls.PrintFloat32),
+                [Calls.PrintStringAddr] = SysCall.GetAction(Calls.PrintStringAddr)
+            };
         }
 
         public void ExecuteInstructions(List<Instruction> list)
@@ -80,16 +97,24 @@ namespace GVM
                     Over();
                     break;
 
-                case 10:
+                case 0x0A:
                     PushState(inst.Value.ToInt32(null));
                     break;
 
-                case 11:
+                case 0x0B:
                     PopState();
                     break;
 
-                case 12:
-                    If(inst.Value.ToInt32(null));
+                case 0x0C:
+                    BranchZero(inst.Value.ToInt32(null));
+                    break;
+
+                case 0x0D:
+                    BranchNegative(inst.Value.ToInt32(null));
+                    break;
+
+                case 0x0E:
+                    BranchPositive(inst.Value.ToInt32(null));
                     break;
 
                 case 0x10:
@@ -153,7 +178,7 @@ namespace GVM
 
         public void Call()
         {
-            SysCall.GetAction(CurrentState.DataStack.Pop())();
+            ((Action)Syscalls[(CurrentState.DataStack.Pop())])();
         }
 
         // looks up the value at the top of the current data stack
@@ -226,14 +251,28 @@ namespace GVM
             CurrentState = PreviousStates.Pop();
         }
 
-        // if value on top of stack is 0, jumps to instruction number
-        // at CurrentState.LocalSymbolTable["If-Branch"]
-        // Won't be implemented until I design an instruction set
-        public void If(int pc)
+        // Sets PC to given int if value on top is 0
+        public void BranchZero(int pc)
         {
-            var top = CurrentState.DataStack.Pop().ToInt32(null);
+            if (CurrentState.DataStack.Pop().ToInt32(null) == 0)
+            {
+                CurrentState.ProgramCounter = pc;
+            }
+        }
 
-            if (top == 0)
+        // Sets PC to given int if value on top is greater than 0
+        public void BranchPositive(int pc)
+        {
+            if (CurrentState.DataStack.Pop().ToInt32(null) > 0)
+            {
+                CurrentState.ProgramCounter = pc;
+            }
+        }
+
+        // Sets PC to given int if value on top is less than 0
+        public void BranchNegative(int pc)
+        {
+            if (CurrentState.DataStack.Pop().ToInt32(null) < 0)
             {
                 CurrentState.ProgramCounter = pc;
             }
@@ -258,8 +297,10 @@ namespace GVM
 
         public void DivInt()
         {
-            var temp = CurrentState.DataStack.Pop().ToInt32(null);
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) / temp);
+            var b = CurrentState.DataStack.Pop().ToInt32(null);
+            var a = CurrentState.DataStack.Pop().ToInt32(null);
+            CurrentState.DataStack.Push(a/b);
+            GlobalSymbolTable["Remainder"] = a % b;
         }
 
         // Float32 arithmetic

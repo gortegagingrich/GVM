@@ -1,0 +1,76 @@
+﻿push 1
+push 3
+add_int
+store_global 0xFFFF
+push 0
+call
+push "\n"
+store_global 0
+pop
+push 0
+store_global 0xFFFF
+pop
+push 2
+call
+push 2
+sub_int
+store_global 0xFFFF
+push 0
+call
+push "\n"
+store_global 0
+pop
+push 0
+store_global 0xFFFF
+pop
+push 2
+call
+store_local 0
+load_local 0
+copy
+copy
+copy
+push 2
+mul_int
+mul_int
+mul_int
+store_global 0xFFFF
+push 0
+call
+push "\n"
+store_global 0
+pop
+push 0
+store_global 0xFFFF
+pop
+push 2
+call
+swap
+div_int
+swap
+div_int
+store_global 0xFFFF
+push 0
+call
+push 0
+bez 65
+push "\n"
+store_global 0
+pop
+push 0
+store_global 0xFFFF
+pop
+push 2
+call
+end
+push 1
+push 0
+bez 56
+push "This should not be reached\n"
+store_global 0
+pop
+push 0
+store_global 0xFFFF
+pop
+push 2
+call
