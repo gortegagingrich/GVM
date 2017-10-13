@@ -4,6 +4,6 @@
     {
         PrintInt32 = 0,
         PrintFloat32 = 1,
-        PrintStringAddr = 2
+        PrintString = 2
     }
 }

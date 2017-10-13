@@ -13,6 +13,7 @@ namespace GVM
         private MachineState CurrentState;
         private Stack<MachineState> PreviousStates;
         private Hashtable Syscalls;
+        private List<IConvertible> StaticData;
 
         internal static Hashtable GlobalSymbolTable = new Hashtable();
 
@@ -20,14 +21,26 @@ namespace GVM
         {
             CurrentState = new MachineState
             {
-                DataStack = new Stack<IConvertible>(),
+                Stack0 = new Stack<IConvertible>(),
+                Stack1 = new Stack<IConvertible>(),
                 LocalSymbolTable = new Hashtable(),
                 ProgramCounter = 0
             };
-            
-            PreviousStates = new Stack<MachineState>();
 
+            StaticData = new List<IConvertible>();
+            PreviousStates = new Stack<MachineState>();
             SetDefaultSyscalls();
+        }
+
+        public void Reset()
+        {
+            CurrentState.ProgramCounter = 0;
+            CurrentState.LocalSymbolTable.Clear();
+            StaticData.Clear();
+            PreviousStates.Clear();
+
+            ClearPrimary();
+            ClearSecondary();
         }
 
         public void AddSyscall(IConvertible id, Action act)
@@ -41,12 +54,14 @@ namespace GVM
             {
                 [Calls.PrintInt32] = SysCall.GetAction(Calls.PrintInt32),
                 [Calls.PrintFloat32] = SysCall.GetAction(Calls.PrintFloat32),
-                [Calls.PrintStringAddr] = SysCall.GetAction(Calls.PrintStringAddr)
+                [Calls.PrintString] = SysCall.GetAction(Calls.PrintString)
             };
         }
 
         public void ExecuteInstructions(List<Instruction> list)
         {
+            Reset();
+
             while (CurrentState.ProgramCounter < list.Count() && list.ElementAt(CurrentState.ProgramCounter).Op != 0xFF)
             {
                 try
@@ -57,7 +72,7 @@ namespace GVM
                     Console.WriteLine(e.Message);
                     Console.WriteLine(list.ElementAt(--CurrentState.ProgramCounter).Op);
                     Console.WriteLine("An exception was thrown.\nCurrent stack state:");
-                    foreach (IConvertible i in CurrentState.DataStack)
+                    foreach (IConvertible i in CurrentState.Stack0)
                     {
                         Console.WriteLine(i);
                     }
@@ -111,11 +126,11 @@ namespace GVM
                     break;
 
                 case 0x0A:
-                    PushState(inst.Value.ToInt32(null));
+                    Jump(inst.Value.ToInt32(null));
                     break;
 
                 case 0x0B:
-                    PopState();
+                    Return();
                     break;
 
                 case 0x0C:
@@ -202,114 +217,145 @@ namespace GVM
                     RotateRight(inst.Value.ToInt32(null));
                     break;
 
+                case 0xF0:
+                    ClearPrimary();
+                    break;
+
+                case 0xF1:
+                    ClearSecondary();
+                    break;
+
                 default:
                     Console.WriteLine("Unknown opcode: " + inst.Op);
                     break;
             }
         }
 
-        // removes and returns value on top of current data stack
+        // pop's top value from primary stack and pushes it to secondary stack
         public void PopVal()
         {
-            CurrentState.DataStack.Pop();
+            CurrentState.Stack1.Push(CurrentState.Stack0.Pop());
         }
 
         // pushes given IConvertible value onto current data stack
         public void PushVal(IConvertible val)
         {
-            CurrentState.DataStack.Push(val);
+            CurrentState.Stack0.Push(val);
         }
 
-        // performs given action on the current data stack
-        // this is used for whatever you might want to implement through syscalls,
-        // like printing out values from the stack or symbol tables.
-        // Normally, Call() should be used instead; this is here to make testing syscalls easier.
-        internal void Call(Action f)
-        {
-            f();
-        }
-
+        // performs action associated with top value on the stack
         public void Call()
         {
-            var a = CurrentState.DataStack.Pop();
-
+            var a = CurrentState.Stack0.Pop();
             ((Action)Syscalls[a])();
         }
+
+        // dynamic data
 
         // looks up the value at the top of the current data stack
         // and stores it in the current local symbol table with the given key
         public void StoreVal(Object addr)
         {
-            CurrentState.LocalSymbolTable[addr] = CurrentState.DataStack.Peek();
+            CurrentState.LocalSymbolTable[addr] = CurrentState.Stack0.Peek();
         }
 
         // same as StoreVal, but stores in the global symbol table
         public void StoreValGlobal(Object addr)
         {
-            GlobalSymbolTable[addr] = CurrentState.DataStack.Peek();
+            GlobalSymbolTable[addr] = CurrentState.Stack0.Peek();
         }
 
         // pushes the corresponding value from the current local symbol table onto the local data stack
         public void LoadValue(Object addr)
         {
-            CurrentState.DataStack.Push((IConvertible)CurrentState.LocalSymbolTable[addr]);
+            CurrentState.Stack0.Push((IConvertible)CurrentState.LocalSymbolTable[addr]);
         }
 
         // same as load value, but uses the global symbol table
         public void LoadValueGlobal(Object addr)
         {
-            CurrentState.DataStack.Push((IConvertible)GlobalSymbolTable[addr]);
+            CurrentState.Stack0.Push((IConvertible)GlobalSymbolTable[addr]);
         }
+
+        // static data
+
+        // stores value on top of the stack in StaticData[key]
+        public void StoreStatic(int key)
+        {
+            StaticData[key] = CurrentState.Stack0.Peek();
+        }
+
+        // pushes value of StaticData[key] onto stack
+        public void LoadStatic(int key)
+        {
+            CurrentState.Stack0.Push(StaticData[key]);
+        }
+
+        // misc stack manipulations
 
         // duplicates the value on top of the stack
         public void Copy()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Peek());
+            CurrentState.Stack0.Push(CurrentState.Stack0.Peek());
         }
 
         // swaps the top two values on the stack
         public void Swap()
         {
-            var a = CurrentState.DataStack.Pop();
-            var b = CurrentState.DataStack.Pop();
-            CurrentState.DataStack.Push(a);
-            CurrentState.DataStack.Push(b);
+            var a = CurrentState.Stack0.Pop();
+            var b = CurrentState.Stack0.Pop();
+            CurrentState.Stack0.Push(a);
+            CurrentState.Stack0.Push(b);
         }
 
         // pushes a copy of the second element onto the data stack
         public void Over()
         {
-            var a = CurrentState.DataStack.Pop();
-            var b = CurrentState.DataStack.Pop();
-            CurrentState.DataStack.Push(b);
-            CurrentState.DataStack.Push(a);
-            CurrentState.DataStack.Push(b);
+            var a = CurrentState.Stack0.Pop();
+            var b = CurrentState.Stack0.Pop();
+            CurrentState.Stack0.Push(b);
+            CurrentState.Stack0.Push(a);
+            CurrentState.Stack0.Push(b);
         }
 
-        // switches to a new state with a new data stack and local symbol table
+        public void ClearPrimary()
+        {
+            CurrentState.Stack0.Clear();
+        }
+
+        public void ClearSecondary()
+        {
+            CurrentState.Stack1.Clear();
+        }
+
+        // switches to a new state
+        // new state's main stack is previous state's secondary stack
+        // new state's secondary stack is new
         // will be used for stuff like subroutines
-        public void PushState(int pc)
+        public void Jump(int pc)
         {
             PreviousStates.Push(CurrentState);
             CurrentState = new MachineState
             {
-                DataStack = new Stack<IConvertible>(),
+                Stack0 = PreviousStates.Peek().Stack1,
+                Stack1 = new Stack<IConvertible>(),
                 LocalSymbolTable = new Hashtable(),
                 ProgramCounter = pc
             };
         }
-
-        // switches to the previous state
+        
+        // clear's main stack and switches to previous state
         // will be used for returning from a subroutine
-        public void PopState()
+        public void Return()
         {
+            CurrentState.Stack0.Clear();
             CurrentState = PreviousStates.Pop();
         }
 
         // Sets PC to given int if value on top is 0
         public void BranchZero(int pc)
         {
-            if (CurrentState.DataStack.Pop().ToInt32(null) == 0)
+            if (CurrentState.Stack0.Pop().ToInt32(null) == 0)
             {
                 CurrentState.ProgramCounter = pc;
             }
@@ -318,7 +364,7 @@ namespace GVM
         // Sets PC to given int if value on top is greater than 0
         public void BranchPositive(int pc)
         {
-            if (CurrentState.DataStack.Pop().ToInt32(null) > 0)
+            if (CurrentState.Stack0.Pop().ToInt32(null) > 0)
             {
                 CurrentState.ProgramCounter = pc;
             }
@@ -327,7 +373,7 @@ namespace GVM
         // Sets PC to given int if value on top is less than 0
         public void BranchNegative(int pc)
         {
-            if (CurrentState.DataStack.Pop().ToInt32(null) < 0)
+            if (CurrentState.Stack0.Pop().ToInt32(null) < 0)
             {
                 CurrentState.ProgramCounter = pc;
             }
@@ -336,101 +382,101 @@ namespace GVM
         // Int32 arithmetic
         public void AddInt()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) + CurrentState.DataStack.Pop().ToInt32(null));
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToInt32(null) + CurrentState.Stack0.Pop().ToInt32(null));
         }
 
         public void SubInt()
         {
-            var temp = CurrentState.DataStack.Pop().ToInt32(null);
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) - temp);
+            var temp = CurrentState.Stack0.Pop().ToInt32(null);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToInt32(null) - temp);
         }
 
         public void MulInt()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) * CurrentState.DataStack.Pop().ToInt32(null));
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToInt32(null) * CurrentState.Stack0.Pop().ToInt32(null));
         }
 
         public void DivInt()
         {
-            var a = CurrentState.DataStack.Pop().ToInt32(null);
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) / a);
+            var a = CurrentState.Stack0.Pop().ToInt32(null);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToInt32(null) / a);
         }
 
         public void ModInt()
         {
-            var a = CurrentState.DataStack.Pop().ToInt32(null);
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) % a);
+            var a = CurrentState.Stack0.Pop().ToInt32(null);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToInt32(null) % a);
         }
 
         public void Inc()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) + 1);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToInt32(null) + 1);
         }
 
         public void Dec()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) - 1);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToInt32(null) - 1);
         }
 
         // Float32 arithmetic
         public void AddFloat()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) + CurrentState.DataStack.Pop().ToSingle(null));
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToSingle(null) + CurrentState.Stack0.Pop().ToSingle(null));
         }
 
         public void SubFloat()
         {
-            var temp = CurrentState.DataStack.Pop().ToSingle(null);
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) - temp);
+            var temp = CurrentState.Stack0.Pop().ToSingle(null);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToSingle(null) - temp);
         }
 
         public void MulFloat()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) * CurrentState.DataStack.Pop().ToSingle(null));
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToSingle(null) * CurrentState.Stack0.Pop().ToSingle(null));
         }
 
         public void DivFloat()
         {
-            var temp = CurrentState.DataStack.Pop().ToSingle(null);
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) / temp);
+            var temp = CurrentState.Stack0.Pop().ToSingle(null);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToSingle(null) / temp);
         }
 
         // bitwise operations
         public void Not()
         {
-            CurrentState.DataStack.Push(~CurrentState.DataStack.Pop().ToUInt32(null));
+            CurrentState.Stack0.Push(~CurrentState.Stack0.Pop().ToUInt32(null));
         }
 
         public void And()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToUInt32(null) & CurrentState.DataStack.Pop().ToUInt32(null));
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToUInt32(null) & CurrentState.Stack0.Pop().ToUInt32(null));
         }
 
         public void Or()
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToUInt32(null) | CurrentState.DataStack.Pop().ToUInt32(null));
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToUInt32(null) | CurrentState.Stack0.Pop().ToUInt32(null));
         }
 
         public void ShiftLeft(int val)
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToUInt32(null) << val);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToUInt32(null) << val);
         }
 
         public void ShiftRight(int val)
         {
-            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToUInt32(null) >> val);
+            CurrentState.Stack0.Push(CurrentState.Stack0.Pop().ToUInt32(null) >> val);
         }
 
         public void RotateLeft(int val)
         {
-            var a = CurrentState.DataStack.Pop().ToUInt32(null);
-            CurrentState.DataStack.Push((a << val) | (a >> -val));
+            var a = CurrentState.Stack0.Pop().ToUInt32(null);
+            CurrentState.Stack0.Push((a << val) | (a >> -val));
         }
 
         public void RotateRight(int val)
         {
-            var a = CurrentState.DataStack.Pop().ToUInt32(null);
-            CurrentState.DataStack.Push((a >> val) | (a << -val));
+            var a = CurrentState.Stack0.Pop().ToUInt32(null);
+            CurrentState.Stack0.Push((a >> val) | (a << -val));
         }
     }
 }

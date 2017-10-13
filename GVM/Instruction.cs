@@ -50,6 +50,11 @@ namespace GVM
              * 0x25 = RotateLeft(Value)
              * 0x26 = RotateRight(Value)
              * 
+             * 0x30 = StoreStatic(Value)
+             * 0x31 = LoadStatic(Value)
+             * 
+             * 0xF0 = ClearPrimary()
+             * 0xF1 = ClearSecondary()
              * 0xFF = END
              */
             Op = op;
