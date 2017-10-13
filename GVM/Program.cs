@@ -11,8 +11,7 @@ namespace GVM
         static void Main(string[] args)
         {
             StackMachine s = new StackMachine();
-
-            s.ExecuteInstructions(new List<Instruction> {
+            var instructions = new List<Instruction> {
                 // 1 + 3
                 new Instruction(0x00,1), // 0: push 1
                 new Instruction(0x00,3), // push 3
@@ -122,7 +121,20 @@ namespace GVM
                 new Instruction(0x01,null), // pop
                 new Instruction(0x00,Calls.PrintStringAddr), // push 2
                 new Instruction(0x02,null), // call
-            });
+            };
+
+            var instructions2 = new List<Instruction>
+            {
+                new Instruction(0x00,7),
+                new Instruction(0x20,null),
+
+                // print result
+                new Instruction(0x04,0xFFFF), // 3: store_global 0xFFFF
+                new Instruction(0x00,Calls.PrintInt32), // push 0
+                new Instruction(0x02,null), // call
+            };
+
+            s.ExecuteInstructions(instructions2);
         }
     }
 }

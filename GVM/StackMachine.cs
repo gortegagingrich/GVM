@@ -49,7 +49,20 @@ namespace GVM
         {
             while (CurrentState.ProgramCounter < list.Count() && list.ElementAt(CurrentState.ProgramCounter).Op != 0xFF)
             {
-                ExecuteInstruction(list.ElementAt(CurrentState.ProgramCounter++));
+                try
+                {
+                    ExecuteInstruction(list.ElementAt(CurrentState.ProgramCounter++));
+                } catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine(list.ElementAt(--CurrentState.ProgramCounter).Op);
+                    Console.WriteLine("An exception was thrown.\nCurrent stack state:");
+                    foreach (IConvertible i in CurrentState.DataStack)
+                    {
+                        Console.WriteLine(i);
+                    }
+                    return;
+                }
             }
         }
 
@@ -149,6 +162,46 @@ namespace GVM
                     DivFloat();
                     break;
 
+                case 0x18:
+                    ModInt();
+                    break;
+
+                case 0x19:
+                    Inc();
+                    break;
+
+                case 0x1A:
+                    Dec();
+                    break;
+
+                case 0x20:
+                    Not();
+                    break;
+
+                case 0x21:
+                    And();
+                    break;
+
+                case 0x22:
+                    Or();
+                    break;
+
+                case 0x23:
+                    ShiftLeft(inst.Value.ToInt32(null));
+                    break;
+
+                case 0x24:
+                    ShiftRight(inst.Value.ToInt32(null));
+                    break;
+
+                case 0x25:
+                    RotateLeft(inst.Value.ToInt32(null));
+                    break;
+
+                case 0x26:
+                    RotateRight(inst.Value.ToInt32(null));
+                    break;
+
                 default:
                     Console.WriteLine("Unknown opcode: " + inst.Op);
                     break;
@@ -178,7 +231,9 @@ namespace GVM
 
         public void Call()
         {
-            ((Action)Syscalls[(CurrentState.DataStack.Pop())])();
+            var a = CurrentState.DataStack.Pop();
+
+            ((Action)Syscalls[a])();
         }
 
         // looks up the value at the top of the current data stack
@@ -297,10 +352,24 @@ namespace GVM
 
         public void DivInt()
         {
-            var b = CurrentState.DataStack.Pop().ToInt32(null);
             var a = CurrentState.DataStack.Pop().ToInt32(null);
-            CurrentState.DataStack.Push(a/b);
-            GlobalSymbolTable["Remainder"] = a % b;
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) / a);
+        }
+
+        public void ModInt()
+        {
+            var a = CurrentState.DataStack.Pop().ToInt32(null);
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) % a);
+        }
+
+        public void Inc()
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) + 1);
+        }
+
+        public void Dec()
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToInt32(null) - 1);
         }
 
         // Float32 arithmetic
@@ -324,6 +393,44 @@ namespace GVM
         {
             var temp = CurrentState.DataStack.Pop().ToSingle(null);
             CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToSingle(null) / temp);
+        }
+
+        // bitwise operations
+        public void Not()
+        {
+            CurrentState.DataStack.Push(~CurrentState.DataStack.Pop().ToUInt32(null));
+        }
+
+        public void And()
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToUInt32(null) & CurrentState.DataStack.Pop().ToUInt32(null));
+        }
+
+        public void Or()
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToUInt32(null) | CurrentState.DataStack.Pop().ToUInt32(null));
+        }
+
+        public void ShiftLeft(int val)
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToUInt32(null) << val);
+        }
+
+        public void ShiftRight(int val)
+        {
+            CurrentState.DataStack.Push(CurrentState.DataStack.Pop().ToUInt32(null) >> val);
+        }
+
+        public void RotateLeft(int val)
+        {
+            var a = CurrentState.DataStack.Pop().ToUInt32(null);
+            CurrentState.DataStack.Push((a << val) | (a >> -val));
+        }
+
+        public void RotateRight(int val)
+        {
+            var a = CurrentState.DataStack.Pop().ToUInt32(null);
+            CurrentState.DataStack.Push((a >> val) | (a << -val));
         }
     }
 }

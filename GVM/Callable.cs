@@ -6,7 +6,7 @@ namespace GVM
     // notes: 
     // syscalls should never have any effect on any data stacks
     // default syscalls should only take one argument from the global symbol table
-    // GlobalSymbolTable[0xffff] should be reserved for passing arguments to default syscalls
+    // GlobalSymbolTable[0xffff] should be reserved for passing arguments to default syscalls <-- this will probably be changed to 0
     abstract class SysCall
     {
         public static Action GetAction(IConvertible i)
@@ -41,7 +41,7 @@ namespace GVM
         // prints value of argument as a 32 bit integer
         public static void PrintInt32()
         {
-            Console.Write(((IConvertible)StackMachine.GlobalSymbolTable[0xffff]).ToInt32(null));
+            Console.Write((int)((IConvertible)StackMachine.GlobalSymbolTable[0xffff]).ToUInt32(null));
         }
 
         // prints value of argument as a 32 bit float

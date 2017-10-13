@@ -32,21 +32,23 @@ namespace GVM
              * 0x10 = AddInt()
              * 0x11 = SubInt()
              * 0x12 = MulInt()
-             * 0x13 = DivInt() // sets GlobalSymbolTable["Remainder"] to remainder
+             * 0x13 = DivInt()
              * 0x14 = AddFloat()
              * 0x15 = SubFloat()
              * 0x16 = MulFloat()
              * 0x17 = DivFloat()
-             * 0x18 = Inc() NOT IMPLEMENTED
-             * 0x19 = Dec() NOT IMPLEMENTED
              * 
-             * 0x20 = Not() NOT IMPLEMENTED
-             * 0x21 = And() NOT IMPLEMENTED
-             * 0x22 = Or() NOT IMPLEMENTED
-             * 0x23 = ShiftLeft(Value) NOT IMPLEMENTED
-             * 0x24 = ShiftRight(Value) NOT IMPLEMENTED
-             * 0x25 = RotateLeft(Value) NOT IMPLEMENTED
-             * 0x26 = RotateRight(Value) NOT IMPLEMENTED
+             * 0x18 = ModInt()
+             * 0x19 = Inc()
+             * 0x1A = Dec()
+             * 
+             * 0x20 = Not()
+             * 0x21 = And()
+             * 0x22 = Or()
+             * 0x23 = ShiftLeft(Value)
+             * 0x24 = ShiftRight(Value)
+             * 0x25 = RotateLeft(Value)
+             * 0x26 = RotateRight(Value)
              * 
              * 0xFF = END
              */
