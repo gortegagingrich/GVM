@@ -12,7 +12,7 @@ namespace GVM
 
         private MachineState CurrentState;
         private Stack<MachineState> PreviousStates;
-        private Hashtable Syscalls;
+        private List<Action> Syscalls;
         private List<IConvertible> StaticData;
 
         internal static Hashtable GlobalSymbolTable = new Hashtable();
@@ -45,16 +45,16 @@ namespace GVM
 
         public void AddSyscall(IConvertible id, Action act)
         {
-            Syscalls[id] = act;
+            Syscalls[(int)id] = act;
         }
 
         public void SetDefaultSyscalls()
         {
-            Syscalls = new Hashtable
+            Syscalls = new List<Action>
             {
-                [Calls.PrintInt32] = SysCall.GetAction(Calls.PrintInt32),
-                [Calls.PrintFloat32] = SysCall.GetAction(Calls.PrintFloat32),
-                [Calls.PrintString] = SysCall.GetAction(Calls.PrintString)
+                SysCall.GetAction(Calls.PrintInt32),
+                SysCall.GetAction(Calls.PrintFloat32),
+                SysCall.GetAction(Calls.PrintString)
             };
         }
 
@@ -246,7 +246,7 @@ namespace GVM
         // performs action associated with top value on the stack
         public void Call()
         {
-            var a = CurrentState.Stack0.Pop();
+            var a = (int)CurrentState.Stack0.Pop();
             ((Action)Syscalls[a])();
         }
 

@@ -152,23 +152,12 @@ namespace GVM
                 new Instruction(0x0B,null), // return
             };
 
+            var instructions4 = Parser.Parse(Tokenizer.Tokenize("../../Test.gsm"));
+            
             s.ExecuteInstructions(instructions);
             s.ExecuteInstructions(instructions2);
             s.ExecuteInstructions(instructions3);
-
-            Console.WriteLine("\nRegex tests:");
-            Console.WriteLine("\"12\" = String? " + Tokenizer.TestMatch("12", TokenType.String));
-            Console.WriteLine("\"call\" = SingleArg? " + Tokenizer.TestMatch("call", TokenType.SingleArg));
-            Console.WriteLine("\"call\" = DoubleArg? " + Tokenizer.TestMatch("call", TokenType.DoubleArg));
-            Console.WriteLine("\"push 2\" = SingleArg? " + Tokenizer.TestMatch("push 2", TokenType.SingleArg));
-            Console.WriteLine("\"push 2\" = DoubleArg? " + Tokenizer.TestMatch("push 2", TokenType.DoubleArg));
-            Console.WriteLine("\"push \"this is a test string\"\" = SingleArg? " + Tokenizer.TestMatch("\"push \"this is a test string\"", TokenType.SingleArg));
-            Console.WriteLine("\"push \"this is a test string\"\" = DoubleArg? " + Tokenizer.TestMatch("\"push \"this is a test string\"", TokenType.DoubleArg));
-
-            foreach (Token t in Tokenizer.Tokenize("../../Test.gsm"))
-            {
-                Console.WriteLine(t.GetString());
-            }            
+            s.ExecuteInstructions(instructions4);
         }
     }
 }

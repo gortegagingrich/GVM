@@ -2,10 +2,16 @@
 push 3
 add_int
 pop
-jump 6
+jump 7
+jump 11
 end
 store_global 0
 push 0
 call
 return
 push
+push "\n"
+store_global 0
+push 2
+call
+return

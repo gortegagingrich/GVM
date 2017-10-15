@@ -64,7 +64,7 @@ namespace GVM
                     return Single.Parse(Content, System.Globalization.NumberStyles.HexNumber);
 
                 case TokenType.String:
-                    var str = Content.Replace("\"","\"");
+                    var str = Content.Substring(1,Content.Length - 2);
                     str = str.Replace("\\\"", "\"");
                     str = str.Replace("\\n", "\n");
                     return str;
@@ -81,9 +81,9 @@ namespace GVM
     {
         private static Hashtable Patterns = new Hashtable
         {
-            [TokenType.DoubleArg] = new Regex(@"\w+ \w+"),
-            [TokenType.SingleArg] = new Regex(@"[a-z]+"),
-            [TokenType.String] = new Regex("[\"][[\\\"]|[^\"]]*[\"]"),
+            [TokenType.DoubleArg] = new Regex(@"[\w_]+ (\w|\"")+"),
+            [TokenType.SingleArg] = new Regex(@"[\w_]+"),
+            [TokenType.String] = new Regex("[\"]([\\\"]|[^\"])*[\"]"),
             [TokenType.IntDec] = new Regex("[0-9]+"),
             [TokenType.IntHex] = new Regex("(0x|0X)[0-9a-fA-F]+"),
             [TokenType.Float] = new Regex(@"[0-9]+\.[0-9]+")

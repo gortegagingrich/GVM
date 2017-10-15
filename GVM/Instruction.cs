@@ -60,5 +60,38 @@ namespace GVM
             Op = op;
             Value = val;
         }
+
+        public static Byte StringToOp(string str)
+        {
+            switch (str)
+            {
+                case "push":
+                    return 0x00;
+
+                case "pop":
+                    return 0x01;
+
+                case "call":
+                    return 0x02;
+
+                case "store_global":
+                    return 0x04;
+
+                case "jump":
+                    return 0x0A;
+
+                case "return":
+                    return 0x0B;
+
+                case "add_int":
+                    return 0x10;
+
+                case "end":
+                default:
+                    return 0xFF;
+            }
+
+            return 0xFF;
+        }
     }
 }
