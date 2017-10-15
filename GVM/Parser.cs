@@ -17,11 +17,11 @@ namespace GVM
             {
                 token = tokens[i];
 
-                if (token.Type == TokenType.SingleArg)
+                if (token.Type == TokenType.SingleToken)
                 {
                     instructions.Add(new Instruction(Instruction.StringToOp(token.Content), null));
                 }
-                else if (token.Type == TokenType.DoubleArg)
+                else if (token.Type == TokenType.DoubleToken)
                 {
                     instructions.Add(new Instruction(Instruction.StringToOp(token.Content), tokens[++i].ConvertContent()));
                 }

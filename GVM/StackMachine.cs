@@ -45,7 +45,15 @@ namespace GVM
 
         public void AddSyscall(IConvertible id, Action act)
         {
-            Syscalls[(int)id] = act;
+            var index = (int)id;
+            if (index >= Syscalls.Count())
+            {
+                Syscalls.Insert(index, act);
+            }
+            else
+            {
+                Syscalls[index] = act;
+            }
         }
 
         public void SetDefaultSyscalls()
@@ -62,15 +70,15 @@ namespace GVM
         {
             Reset();
 
-            while (CurrentState.ProgramCounter < list.Count() && list.ElementAt(CurrentState.ProgramCounter).Op != 0xFF)
+            while (CurrentState.ProgramCounter < list.Count() && list[CurrentState.ProgramCounter].Op != 0xFF)
             {
                 try
                 {
-                    ExecuteInstruction(list.ElementAt(CurrentState.ProgramCounter++));
+                    ExecuteInstruction(list[CurrentState.ProgramCounter++]);
                 } catch (Exception e)
                 {
                     Console.WriteLine(e.Message);
-                    Console.WriteLine(list.ElementAt(--CurrentState.ProgramCounter).Op);
+                    Console.WriteLine(list[--CurrentState.ProgramCounter].Op);
                     Console.WriteLine("An exception was thrown.\nCurrent stack state:");
                     foreach (IConvertible i in CurrentState.Stack0)
                     {
@@ -217,6 +225,22 @@ namespace GVM
                     RotateRight(inst.Value.ToInt32(null));
                     break;
 
+                case 0x40:
+                    StoreVal(CurrentState.Stack0.Pop());
+                    break;
+
+                case 0x41:
+                    StoreValGlobal(CurrentState.Stack0.Pop());
+                    break;
+
+                case 0x42:
+                    LoadValue(CurrentState.Stack0.Pop());
+                    break;
+
+                case 0x43:
+                    LoadValueGlobal(CurrentState.Stack0.Pop());
+                    break;
+
                 case 0xF0:
                     ClearPrimary();
                     break;
@@ -247,7 +271,7 @@ namespace GVM
         public void Call()
         {
             var a = (int)CurrentState.Stack0.Pop();
-            ((Action)Syscalls[a])();
+            Syscalls[a]();
         }
 
         // dynamic data

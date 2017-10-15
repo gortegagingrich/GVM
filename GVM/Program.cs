@@ -110,7 +110,6 @@ namespace GVM
                 new Instruction(0x00,Calls.PrintString), // push 2
                 new Instruction(0x02,null), // call
             };
-
             var instructions2 = new List<Instruction>
             {
                 new Instruction(0x00,7),
@@ -129,7 +128,6 @@ namespace GVM
 
                 new Instruction(0xFF,null), // end
             };
-
             var instructions3 = new List<Instruction>
             {
                 new Instruction(0, 2), // push 2
@@ -151,13 +149,63 @@ namespace GVM
                 new Instruction(2,null), // call
                 new Instruction(0x0B,null), // return
             };
-
             var instructions4 = Parser.Parse(Tokenizer.Tokenize("../../Test.gsm"));
             
+            Console.WriteLine("instructions:");
             s.ExecuteInstructions(instructions);
+
+            Console.WriteLine("instructions 2:");
             s.ExecuteInstructions(instructions2);
+
+            Console.WriteLine("instructions 3:");
             s.ExecuteInstructions(instructions3);
+
+            Console.WriteLine("instructions 4:");
             s.ExecuteInstructions(instructions4);
+
+            s.AddSyscall(3, () =>
+            {
+                Console.WriteLine("This is a custom syscall");
+                Console.WriteLine("This is the current state of the global symbol table:");
+
+                foreach (var i in StackMachine.GlobalSymbolTable.Keys)
+                {
+                    Console.WriteLine(String.Format("{0} : {1}", i, StackMachine.GlobalSymbolTable[i]));
+                }
+            });
+
+            var instructions5 = new List<Instruction>
+            {
+                new Instruction(0,3), // push 3
+                new Instruction(4,0), // store_global 0
+                new Instruction(0x19,null), // inc
+                new Instruction(4,1), // store_global 1
+                new Instruction(0x19,null), // inc
+                new Instruction(4,2), // store_global 2
+                new Instruction(0,2), // push 2
+                new Instruction(0x11,null), // sub_int
+                new Instruction(2,null), // call
+                new Instruction(0xFF,null), // end
+            };
+
+            Console.WriteLine("instructions 5:");
+            s.ExecuteInstructions(instructions5);
+
+            var instruction6 = new List<Instruction>
+            {
+                new Instruction(0,0), // push 0
+                new Instruction(0,0), // push 0
+                new Instruction(0x41,null), // store_global_stack
+                new Instruction(0x19,null), // inc
+                new Instruction(0,1), // push 1
+                new Instruction(0x41,null), // store_global_stack
+                new Instruction(0,3), // push 3
+                new Instruction(2,null), // call
+                new Instruction(0xFF,null) // end
+            };
+
+            Console.WriteLine("instruction 6:");
+            s.ExecuteInstructions(instruction6);
         }
     }
 }

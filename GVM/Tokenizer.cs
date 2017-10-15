@@ -11,8 +11,8 @@ namespace GVM
 {
     public enum TokenType
     {
-        SingleArg = 0,
-        DoubleArg = 1,
+        SingleToken = 0,
+        DoubleToken = 1,
         String = 2,
         IntDec = 3,
         IntHex = 4,
@@ -33,9 +33,9 @@ namespace GVM
         {
             switch (Type)
             {
-                case TokenType.SingleArg:
+                case TokenType.SingleToken:
                     return "op_0arg";
-                case TokenType.DoubleArg:
+                case TokenType.DoubleToken:
                     return "op_1arg";
                 case TokenType.IntDec:
                     return "int_dec";
@@ -69,8 +69,8 @@ namespace GVM
                     str = str.Replace("\\n", "\n");
                     return str;
 
-                case TokenType.SingleArg:
-                case TokenType.DoubleArg:
+                case TokenType.SingleToken:
+                case TokenType.DoubleToken:
                 default:
                     return "";
             }
@@ -81,8 +81,8 @@ namespace GVM
     {
         private static Hashtable Patterns = new Hashtable
         {
-            [TokenType.DoubleArg] = new Regex(@"[\w_]+ (\w|\"")+"),
-            [TokenType.SingleArg] = new Regex(@"[\w_]+"),
+            [TokenType.DoubleToken] = new Regex(@"[\w_]+ (\w|\"")+"),
+            [TokenType.SingleToken] = new Regex(@"[\w_]+"),
             [TokenType.String] = new Regex("[\"]([\\\"]|[^\"])*[\"]"),
             [TokenType.IntDec] = new Regex("[0-9]+"),
             [TokenType.IntHex] = new Regex("(0x|0X)[0-9a-fA-F]+"),
@@ -98,13 +98,13 @@ namespace GVM
 
             foreach (string line in lines)
             {
-                if (TestMatch(line, TokenType.DoubleArg))
+                if (TestMatch(line, TokenType.DoubleToken))
                 {
                     // add the operator
                     tokens.Add(new Token
                     {
-                        Type = TokenType.DoubleArg,
-                        Content = ((Regex)Patterns[TokenType.SingleArg]).Match(line).ToString()
+                        Type = TokenType.DoubleToken,
+                        Content = ((Regex)Patterns[TokenType.SingleToken]).Match(line).ToString()
                     });
 
                     // add the argument
@@ -115,9 +115,9 @@ namespace GVM
                     {
                         type = TokenType.String;
                     }
-                    else if (TestMatch(tempLine, TokenType.DoubleArg))
+                    else if (TestMatch(tempLine, TokenType.DoubleToken))
                     {
-                        type = TokenType.DoubleArg;
+                        type = TokenType.DoubleToken;
                     }
                     else if (TestMatch(tempLine, TokenType.IntHex))
                     {
@@ -138,11 +138,11 @@ namespace GVM
                         Content = tempLine
                     });
                 }
-                else if (TestMatch(line, TokenType.SingleArg))
+                else if (TestMatch(line, TokenType.SingleToken))
                 {
                     // add the operator
                     tokens.Add(new Token {
-                        Type = TokenType.SingleArg,
+                        Type = TokenType.SingleToken,
                         Content = line
                     });
                 }
