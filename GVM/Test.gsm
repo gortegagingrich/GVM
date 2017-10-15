@@ -4,7 +4,7 @@ add_int
 pop
 jump 6
 end
-store_global 0 //print value
+store_global 0
 push 0
 call
 return
