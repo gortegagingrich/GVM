@@ -9,7 +9,6 @@ store_global 0
 push 0
 call
 return
-push
 push "\n"
 store_global 0
 push 2
