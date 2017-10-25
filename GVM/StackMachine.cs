@@ -17,6 +17,9 @@ namespace GVM
 
         internal static Hashtable GlobalSymbolTable = new Hashtable();
 
+        // I wasn't sure about whether or not to do this, so I'm making it an option.
+        public bool PopAfterStore = false;
+
         public StackMachine()
         {
             CurrentState = new MachineState
@@ -30,6 +33,11 @@ namespace GVM
             StaticData = new List<IConvertible>();
             PreviousStates = new Stack<MachineState>();
             SetDefaultSyscalls();
+        }
+
+        public void SetOptions(bool PopAfterStore = false)
+        {
+            this.PopAfterStore = PopAfterStore;
         }
 
         public void Reset()
@@ -280,13 +288,13 @@ namespace GVM
         // and stores it in the current local symbol table with the given key
         public void StoreVal(Object addr)
         {
-            CurrentState.LocalSymbolTable[addr] = CurrentState.Stack0.Peek();
+            CurrentState.LocalSymbolTable[addr] = PopAfterStore ? CurrentState.Stack0.Pop() : CurrentState.Stack0.Peek();
         }
 
         // same as StoreVal, but stores in the global symbol table
         public void StoreValGlobal(Object addr)
         {
-            GlobalSymbolTable[addr] = CurrentState.Stack0.Peek();
+            GlobalSymbolTable[addr] = PopAfterStore ? CurrentState.Stack0.Pop() : CurrentState.Stack0.Peek();
         }
 
         // pushes the corresponding value from the current local symbol table onto the local data stack
@@ -306,7 +314,7 @@ namespace GVM
         // stores value on top of the stack in StaticData[key]
         public void StoreStatic(int key)
         {
-            StaticData[key] = CurrentState.Stack0.Peek();
+            StaticData[key] = PopAfterStore ? CurrentState.Stack0.Pop() : CurrentState.Stack0.Peek();
         }
 
         // pushes value of StaticData[key] onto stack

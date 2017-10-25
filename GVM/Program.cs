@@ -165,8 +165,7 @@ namespace GVM
 
             s.AddSyscall(3, () =>
             {
-                Console.WriteLine("This is a custom syscall");
-                Console.WriteLine("This is the current state of the global symbol table:");
+                Console.WriteLine("current state of global symbol table:");
 
                 foreach (var i in StackMachine.GlobalSymbolTable.Keys)
                 {
@@ -187,7 +186,6 @@ namespace GVM
                 new Instruction(2,null), // call
                 new Instruction(0xFF,null), // end
             };
-
             Console.WriteLine("instructions 5:");
             s.ExecuteInstructions(instructions5);
 
@@ -203,8 +201,7 @@ namespace GVM
                 new Instruction(2,null), // call
                 new Instruction(0xFF,null) // end
             };
-
-            Console.WriteLine("instruction 6:");
+            Console.WriteLine("instructions 6:");
             s.ExecuteInstructions(instruction6);
         }
     }

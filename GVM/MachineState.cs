@@ -7,10 +7,9 @@ namespace GVM
     // each state needs to keep track of the current data stacks and a local symbol table
     internal struct MachineState
     {
-        public Stack<IConvertible> Stack0; // primary data stack
-        public Stack<IConvertible> Stack1; // secondary data stack used for arguments
-        public Hashtable LocalSymbolTable;
-        // not actually used yet
-        public int ProgramCounter;
+        internal Stack<IConvertible> Stack0; // primary data stack
+        internal Stack<IConvertible> Stack1; // secondary data stack used for arguments
+        internal Hashtable LocalSymbolTable; // used for local variables
+        internal int ProgramCounter; // instruction index for current frame
     }
 }
